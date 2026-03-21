@@ -1,0 +1,26 @@
+# Stage 1: eBPF Builder
+FROM clang:18 AS ebpf-builder
+WORKDIR /app
+COPY pkg/ebpf /app/pkg/ebpf
+RUN apt-get update && apt-get install -y linux-headers-generic libbpf-dev
+RUN cd /app/pkg/ebpf && clang -O2 -target bpf -c filter.c -o filter.o
+
+# Stage 2: Go Builder
+FROM golang:1.22 AS go-builder
+WORKDIR /app
+COPY . .
+# We just need the built eBPF object files
+COPY --from=ebpf-builder /app/pkg/ebpf/filter.o /app/pkg/ebpf/
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /dharma-agent ./cmd/agent
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /dharma-ctl ./cmd/dharma-ctl
+
+# Stage 3: Rugged Runtime
+FROM alpine:3.19
+RUN apk add --no-cache iproute2 iptables wireguard-tools
+COPY --from=go-builder /dharma-agent /usr/local/bin/dharma-agent
+COPY --from=go-builder /dharma-ctl /usr/local/bin/dharma-ctl
+
+# Minimal capabilities needed for networking and eBPF
+# Note: Actual eBPF loading may require SYS_ADMIN and root depending on kernel version
+USER root
+ENTRYPOINT ["/usr/local/bin/dharma-agent"]

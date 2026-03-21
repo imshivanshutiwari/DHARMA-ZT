@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package dharma;
+option go_package = "github.com/dharma-zt/dharma-zt/pkg/api";
+
+service DharmaService {
+  rpc NodeStatus (Empty) returns (StatusResponse);
+  rpc NodeBoot (Empty) returns (StatusResponse);
+  rpc NodeLockdown (Empty) returns (StatusResponse);
+  rpc SetEMCON (EMCONRequest) returns (StatusResponse);
+}
+
+message Empty {}
+
+message StatusResponse {
+  string status = 1;
+  string message = 2;
+}
+
+message EMCONRequest {
+  bool active = 1;
+}

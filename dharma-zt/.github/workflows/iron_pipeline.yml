@@ -1,0 +1,41 @@
+name: DHARMA-ZT Iron Protocol Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: go fmt
+        run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
+
+      - name: go vet
+        run: go vet ./...
+
+  testing:
+    runs-on: ubuntu-latest
+    needs: code-quality
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install libbpf-dev
+        run: sudo apt-get update && sudo apt-get install -y libbpf-dev
+
+      - name: Run Tests with Coverage
+        run: |
+          go test ./... -race -coverprofile=cov.out
+          go tool cover -func=cov.out

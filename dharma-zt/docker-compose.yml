@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  commander:
+    build:
+      context: .
+      dockerfile: Dockerfile.rugged
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+    volumes:
+      - /sys/fs/bpf:/sys/fs/bpf
+    networks:
+      tactical-mesh:
+        ipv4_address: 10.0.0.10
+
+  relay1:
+    build:
+      context: .
+      dockerfile: Dockerfile.rugged
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+    volumes:
+      - /sys/fs/bpf:/sys/fs/bpf
+    networks:
+      tactical-mesh:
+        ipv4_address: 10.0.0.11
+
+  drone1:
+    build:
+      context: .
+      dockerfile: Dockerfile.rugged
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+    volumes:
+      - /sys/fs/bpf:/sys/fs/bpf
+    networks:
+      tactical-mesh:
+        ipv4_address: 10.0.0.12
+
+networks:
+  tactical-mesh:
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24

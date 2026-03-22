@@ -1,8 +1,8 @@
 # Stage 1: eBPF Builder
-FROM clang:18 AS ebpf-builder
+FROM ubuntu:24.04 AS ebpf-builder
 WORKDIR /app
 COPY pkg/ebpf /app/pkg/ebpf
-RUN apt-get update && apt-get install -y linux-headers-generic libbpf-dev
+RUN apt-get update && apt-get install -y clang llvm libbpf-dev linux-libc-dev
 RUN cd /app/pkg/ebpf && clang -O2 -target bpf -c filter.c -o filter.o
 
 # Stage 2: Go Builder
